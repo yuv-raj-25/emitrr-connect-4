@@ -15,6 +15,7 @@ interface UseGameSocketReturn {
   message: string;
   connectionError: boolean;
   countdown: number | null;
+  turnDeadline: number | null;
   winningCells: [number, number][] | null;
   connect: (username: string) => void;
   playBot: (username: string) => void;
@@ -37,6 +38,7 @@ export function useGameSocket(): UseGameSocketReturn {
   const [message, setMessage] = useState("Enter your username to play");
   const [connectionError, setConnectionError] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [turnDeadline, setTurnDeadline] = useState<number | null>(null);
   const [winningCells, setWinningCells] = useState<[number, number][] | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -92,6 +94,7 @@ export function useGameSocket(): UseGameSocketReturn {
       const opponent =
         player === game.player1 ? game.player2 : game.player1;
       setOpponentName(opponent);
+      setTurnDeadline(game.turnDeadline || null);
     },
     []
   );
@@ -116,6 +119,9 @@ export function useGameSocket(): UseGameSocketReturn {
         case "GAME_UPDATE": {
           setBoard(data.game.board);
           setCurrentPlayer(data.game.currentPlayer);
+          setBoard(data.game.board);
+          setCurrentPlayer(data.game.currentPlayer);
+          setTurnDeadline(data.game.turnDeadline || null);
           break;
         }
 
@@ -304,7 +310,9 @@ export function useGameSocket(): UseGameSocketReturn {
     stopCountdown();
     setStatus("waiting");
     setBoard(createEmptyBoard());
+    setBoard(createEmptyBoard());
     setWinningCells(null);
+    setTurnDeadline(null);
     setWinner(null);
     setPlayerNumber(null);
     setMessage("Enter your username to play");
@@ -328,6 +336,7 @@ export function useGameSocket(): UseGameSocketReturn {
     message,
     connectionError,
     countdown,
+    turnDeadline,
     winningCells,
     connect,
     playBot,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameSocket } from "@/hooks/useGameSocket";
 import { Lobby } from "@/components/Lobby";
 import { GameBoard } from "@/components/GameBoard";
@@ -11,10 +11,29 @@ const Index = () => {
     board, currentPlayer, playerNumber, status,
     opponentName, gameId, leaderboard, message,
     countdown, winningCells, connect, playBot, dropDisc, playAgain, disconnect,
-    winner, connectionError
+    winner, connectionError, turnDeadline
   } = useGameSocket();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    if (!turnDeadline) {
+      if (timeLeft !== 0) setTimeLeft(0);
+      return;
+    }
+    
+    // Initial update
+    setTimeLeft(Math.max(0, Math.ceil((turnDeadline - Date.now()) / 1000)));
+
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((turnDeadline - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(timer);
+    }, 200);
+    
+    return () => clearInterval(timer);
+  }, [turnDeadline]);
 
   // Connection Error Screen
   if (connectionError) {
@@ -76,10 +95,18 @@ const Index = () => {
             {/* Game Board */}
             {(isInGame || isGameOver) && (
               <div className="flex flex-col items-center gap-4 sm:gap-6 animate-accordion-down w-full">
-                <div className="flex items-center gap-3 text-xs sm:text-sm px-4 py-2 rounded-full glass">
-                  <span className="text-muted-foreground">vs</span>
-                  <strong className="text-base sm:text-lg text-foreground truncate max-w-[150px]">{opponentName}</strong>
-                  {gameId && <span className="text-[10px] text-muted-foreground opacity-50 ml-1">#{gameId.slice(0, 4)}</span>}
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <div className="flex items-center gap-3 text-xs sm:text-sm px-4 py-2 rounded-full glass">
+                    <span className="text-muted-foreground">vs</span>
+                    <strong className="text-base sm:text-lg text-foreground truncate max-w-[150px]">{opponentName}</strong>
+                    {gameId && <span className="text-[10px] text-muted-foreground opacity-50 ml-1">#{gameId.slice(0, 4)}</span>}
+                  </div>
+                  
+                  {timeLeft > 0 && (
+                    <div className={`text-xl font-bold font-mono px-4 py-2 rounded-full border transition-colors ${timeLeft <= 5 ? "bg-red-500/20 text-red-400 border-red-500/50 animate-pulse" : "bg-slate-800/50 text-slate-200 border-slate-700"}`}>
+                      ⏳ {timeLeft}s
+                    </div>
+                  )}
                 </div>
                 
                 <div className="w-full flex justify-center overflow-x-auto pb-4 px-2">
