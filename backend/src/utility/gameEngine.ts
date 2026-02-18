@@ -80,54 +80,44 @@ export function checkWin(
   row: number,
   col: number,
   player: Player
-): boolean {
+): [number, number][] | null {
   return (
-    checkDirection(board, row, col, player, 0, 1) || // horizontal
-    checkDirection(board, row, col, player, 1, 0) || // vertical
-    checkDirection(board, row, col, player, 1, 1) || // diagonal ↘
-    checkDirection(board, row, col, player, 1, -1)   // diagonal ↙
+    getWinningCells(board, row, col, player, 0, 1) || // horizontal
+    getWinningCells(board, row, col, player, 1, 0) || // vertical
+    getWinningCells(board, row, col, player, 1, 1) || // diagonal ↘
+    getWinningCells(board, row, col, player, 1, -1)   // diagonal ↙
   );
 }
 
-function checkDirection(
+function getWinningCells(
   board: Cell[][],
   row: number,
   col: number,
   player: Player,
   rowDir: number,
   colDir: number
-): boolean {
-  let count = 1;
-  count += countInDirection(board, row, col, player, rowDir, colDir);
-  count += countInDirection(board, row, col, player, -rowDir, -colDir);
-  return count >= 4;
-}
+): [number, number][] | null {
+  const cells: [number, number][] = [[row, col]];
 
-function countInDirection(
-  board: Cell[][],
-  row: number,
-  col: number,
-  player: Player,
-  rowDir: number,
-  colDir: number
-): number {
+  // Forward direction
   let r = row + rowDir;
   let c = col + colDir;
-  let count = 0;
-
-  while (
-    r >= 0 &&
-    r < ROWS &&
-    c >= 0 &&
-    c < COLS &&
-    board[r]?.[c] === player
-  ) {
-    count++;
+  while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r]?.[c] === player) {
+    cells.push([r, c]);
     r += rowDir;
     c += colDir;
   }
 
-  return count;
+  // Backward direction
+  r = row - rowDir;
+  c = col - colDir;
+  while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r]?.[c] === player) {
+    cells.push([r, c]);
+    r -= rowDir;
+    c -= colDir;
+  }
+
+  return cells.length >= 4 ? cells : null;
 }
 
 // ──────────────────────────────────────────────
