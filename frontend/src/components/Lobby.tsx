@@ -22,8 +22,8 @@ export const Lobby = memo(function Lobby({ onJoin, onPlayBot, onDisconnect, mess
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 p-8 glass-card rounded-2xl w-full">
-      <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-200 to-slate-400">
+    <div className="flex flex-col items-center gap-6 p-4 md:p-8 glass-card rounded-2xl w-full">
+      <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-200 to-slate-400">
         Enter Arena
       </h2>
       
