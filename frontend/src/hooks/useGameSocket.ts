@@ -146,6 +146,14 @@ export function useGameSocket(): UseGameSocketReturn {
           break;
         }
 
+        case "OPPONENT_DISCONNECTED":
+          setMessage("Opponent disconnected. Waiting for 30s...");
+          break;
+
+        case "OPPONENT_RECONNECTED":
+          setMessage("Opponent reconnected! Resuming game.");
+          break;
+
         case "WAITING":
           setMessage("Waiting for opponent...");
           startCountdown();
