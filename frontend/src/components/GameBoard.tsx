@@ -31,18 +31,16 @@ export const GameBoard = memo(function GameBoard({ board, currentPlayer, playerN
 
       {/* Game Grid */}
       <div
-        className="relative p-3 bg-blue-900 rounded-xl shadow-2xl border-4 border-blue-950"
+        className="relative p-2 md:p-3 bg-blue-900 rounded-xl shadow-2xl border-4 border-blue-950 inline-block max-w-full"
         style={{
           boxShadow: "inset 0 0 20px rgba(0,0,0,0.6), 0 10px 25px -5px rgba(0, 0, 0, 0.5)",
           background: "linear-gradient(135deg, #1e3a8a 0%, #172554 100%)"
         }}
       >
         <div
+          className="grid gap-1 md:gap-2 p-1 md:p-2"
           style={{
-            display: "inline-grid",
-            gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-            gap: "8px",
-            padding: "8px",
+            gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
           }}
         >
           {Array.from({ length: ROWS }, (_, row) =>
@@ -64,20 +62,16 @@ export const GameBoard = memo(function GameBoard({ board, currentPlayer, playerN
                   key={`${row}-${col}`}
                   onClick={() => onDropDisc(col)}
                   disabled={!canClick}
+                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 rounded-full relative transition-all duration-200 ease-out"
                   style={{
-                    width: "56px",
-                    height: "56px",
-                    borderRadius: "50%",
                     background: background,
                     boxShadow: cellValue !== 0 
-                      ? "2px 5px 10px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(0,0,0,0.2)" 
+                      ? "2px 5px 10px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(0, 0, 0, 0.2)" 
                       : "inset 2px 5px 6px rgba(0,0,0,0.5)", // Inner shadow for empty holes
-                    border: isWinner ? "4px solid white" : "none",
+                    border: isWinner ? "3px solid white" : "none",
                     cursor: canClick ? "pointer" : "default",
                     transform: isWinner ? "scale(1.1)" : "scale(1)",
                     opacity: canClick && cellValue === 0 ? 0.9 : 1,
-                    transition: "all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                    position: "relative",
                     zIndex: isWinner ? 10 : 1
                   }}
                   onMouseEnter={(e) => {
