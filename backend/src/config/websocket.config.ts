@@ -10,6 +10,18 @@ interface Client extends WebSocket {
 const clients = new Map<string, Client>();
 
 export function setupWebSocket(wss: WebSocketServer) {
+  // When matchmaking auto-creates a bot game, notify the client
+  matchmakingService.setOnBotGameStart((username, game) => {
+    const socket = clients.get(username);
+    socket?.send(
+      JSON.stringify({
+        type: "GAME_START",
+        game,
+        player: username,
+      })
+    );
+  });
+
   wss.on("connection", (socket: Client) => {
     console.log("Client connected");
 
@@ -23,6 +35,10 @@ export function setupWebSocket(wss: WebSocketServer) {
 
         case "MAKE_MOVE":
           handleMove(socket, data.column);
+          break;
+
+        case "LEAVE_GAME":
+          handleLeaveGame(socket);
           break;
       }
     });
@@ -84,6 +100,23 @@ function handleJoin(socket: Client, username: string) {
   }
 }
 
+/* ---------------- LEAVE GAME ---------------- */
+
+function handleLeaveGame(socket: Client) {
+  if (!socket.username) return;
+
+  // Remove from matchmaking queue if waiting
+  matchmakingService.leaveQueue(socket.username);
+
+  // Clean up any game this player is still mapped to
+  const game = gameService.getGameByPlayer(socket.username);
+  if (game) {
+    gameService.cleanupGame(game.id);
+  }
+
+  console.log(`${socket.username} left game`);
+}
+
 /* ---------------- MOVE ---------------- */
 
 async function handleMove(socket: Client, column: number) {
@@ -102,7 +135,7 @@ async function handleMove(socket: Client, column: number) {
 
   // If finished
   if (result.winner || result.draw) {
-    broadcastGameOver(game, result.winner, result.draw);
+    broadcastGameOver(game, result.winner, result.draw, result.winningCells);
     return;
   }
 
@@ -119,7 +152,8 @@ async function handleMove(socket: Client, column: number) {
         broadcastGameOver(
           botResult.game,
           botResult.winner,
-          botResult.draw
+          botResult.draw,
+          botResult.winningCells
         );
       }
     }
@@ -141,7 +175,7 @@ function broadcastGameState(game: any) {
   p2?.send(payload);
 }
 
-function broadcastGameOver(game: any, winner?: string, draw?: boolean) {
+function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCells?: [number, number][]) {
   const p1 = clients.get(game.player1);
   const p2 = clients.get(game.player2);
 
@@ -149,6 +183,7 @@ function broadcastGameOver(game: any, winner?: string, draw?: boolean) {
     type: "GAME_OVER",
     winner: winner || null,
     draw: draw || false,
+    winningCells: winningCells || null,
     game,
   });
 
