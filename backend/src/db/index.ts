@@ -10,13 +10,20 @@ let pool: InstanceType<typeof Pool> | null = null;
 const connectDB = async () => {
   if (pool) return pool;
 
-  pool = new Pool({
-    host: process.env.PGHOST,
-    port: Number(process.env.PGPORT) || 5432,
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE,
-  });
+  const connectionConfig = process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      }
+    : {
+        host: process.env.PGHOST,
+        port: Number(process.env.PGPORT) || 5432,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE,
+      };
+
+  pool = new Pool(connectionConfig);
 
   await pool.connect();
   console.log("PostgreSQL connected");
