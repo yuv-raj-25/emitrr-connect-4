@@ -190,24 +190,22 @@ class GameService {
       winningCells: null
     };
   }
-handleReconnect(username: string) {
-  const game = this.getGameByPlayer(username);
-  if (!game || game.status !== "ONGOING") return null;
+  handleReconnect(username: string) {
+    const game = this.getGameByPlayer(username);
+    if (!game || game.status !== "ONGOING") return null;
 
-  if (game.disconnectedPlayers?.has(username)) {
-    console.log(`${username} reconnected`);
+    console.log(`${username} reconnected to game ${game.id}`);
 
-    const timer = game.disconnectTimers?.get(username);
-    if (timer) clearTimeout(timer);
+    if (game.disconnectedPlayers?.has(username)) {
+      const timer = game.disconnectTimers?.get(username);
+      if (timer) clearTimeout(timer);
 
-    game.disconnectedPlayers?.delete(username);
-    game.disconnectTimers?.delete(username);
+      game.disconnectedPlayers.delete(username);
+      game.disconnectTimers?.delete(username);
+    }
 
     return game;
   }
-
-  return null;
-    }
 }
 
 export const gameService = new GameService();

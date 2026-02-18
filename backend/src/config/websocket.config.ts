@@ -49,16 +49,23 @@ export function setupWebSocket(wss: WebSocketServer) {
 
     socket.on("close", () => {
         if (socket.username) {
-            clients.delete(socket.username);
-            const game = gameService.handleDisconnect(socket.username);
-            
-            if (game) {
-              const opponentUsername = game.player1 === socket.username ? game.player2 : game.player1;
-              const opponentSocket = clients.get(opponentUsername);
-              opponentSocket?.send(JSON.stringify({ type: "OPPONENT_DISCONNECTED" }));
+            // Only handle disconnect if this was the active socket
+            if (clients.get(socket.username) === socket) {
+                clients.delete(socket.username);
+                
+                const game = gameService.handleDisconnect(socket.username);
+                
+                if (game) {
+                  const opponentUsername = game.player1 === socket.username ? game.player2 : game.player1;
+                  const opponentSocket = clients.get(opponentUsername);
+                  
+                  if (opponentSocket) {
+                      opponentSocket.send(JSON.stringify({ type: "OPPONENT_DISCONNECTED" }));
+                  }
+                }
+                
+                console.log(`${socket.username} disconnected`);
             }
-            
-            console.log(`${socket.username} disconnected`);
         }
     });
   });
