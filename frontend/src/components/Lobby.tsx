@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 
 interface LobbyProps {
   onJoin: (username: string) => void;
@@ -8,7 +8,7 @@ interface LobbyProps {
   countdown: number | null;
 }
 
-export function Lobby({ onJoin, onDisconnect, message, isWaiting, countdown }: LobbyProps) {
+export const Lobby = memo(function Lobby({ onJoin, onDisconnect, message, isWaiting, countdown }: LobbyProps) {
   const [username, setUsername] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,5 +59,4 @@ export function Lobby({ onJoin, onDisconnect, message, isWaiting, countdown }: L
       )}
     </div>
   );
-}
-
+});

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { type Board, ROWS, COLS, type Player } from "@/types/game";
 
 interface GameBoardProps {
@@ -20,7 +21,7 @@ function isWinningCell(row: number, col: number, winningCells: [number, number][
   return winningCells.some(([r, c]) => r === row && c === col);
 }
 
-export function GameBoard({ board, currentPlayer, playerNumber, onDropDisc, disabled, winningCells }: GameBoardProps) {
+export const GameBoard = memo(function GameBoard({ board, currentPlayer, playerNumber, onDropDisc, disabled, winningCells }: GameBoardProps) {
   const isMyTurn = playerNumber === currentPlayer;
   const canClick = !disabled && isMyTurn;
 
@@ -119,4 +120,4 @@ export function GameBoard({ board, currentPlayer, playerNumber, onDropDisc, disa
       `}</style>
     </div>
   );
-}
+});

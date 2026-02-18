@@ -1,10 +1,11 @@
+import { memo } from "react";
 import type { LeaderboardEntry } from "@/types/game";
 
 interface LeaderboardProps {
   entries: LeaderboardEntry[];
 }
 
-export function Leaderboard({ entries }: LeaderboardProps) {
+export const Leaderboard = memo(function Leaderboard({ entries }: LeaderboardProps) {
   if (entries.length === 0) {
     return (
       <div className="text-sm text-muted-foreground text-center py-4">
@@ -40,4 +41,4 @@ export function Leaderboard({ entries }: LeaderboardProps) {
       </table>
     </div>
   );
-}
+});
