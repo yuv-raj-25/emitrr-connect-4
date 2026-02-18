@@ -75,8 +75,8 @@ class GameService {
     const { row, col } = result;
 
     // Check win
-    const hasWon = checkWin(game.board, row!, col!, playerNumber);
-    if (hasWon) {
+    const winningCells = checkWin(game.board, row!, col!, playerNumber);
+    if (winningCells) {
       game.status = "FINISHED";
       game.winner = username;
 
@@ -95,6 +95,7 @@ class GameService {
       return {
         game,
         winner: username,
+        winningCells,
       };
     }
 
