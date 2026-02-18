@@ -133,36 +133,63 @@ class GameService {
     return { game };
   }
 
-  cleanupGame(gameId: string) {
+  cleanupGame(gameId: string): ActiveGame | undefined {
     const game = activeGames.get(gameId);
-    if (!game) return;
+    if (!game) return undefined;
 
     playerGameMap.delete(game.player1);
     playerGameMap.delete(game.player2);
     activeGames.delete(gameId);
     this.gameBoardMap.delete(gameId);
+    return game;
   }
 
-handleDisconnect(username: string) {
-  const game = this.getGameByPlayer(username);
-  if (!game || game.status !== "ONGOING") return;
+  handleDisconnect(username: string): ActiveGame | undefined {
+    const game = this.getGameByPlayer(username);
+    if (!game || game.status !== "ONGOING") return undefined;
 
-  console.log(`${username} disconnected from game ${game.id}`);
+    console.log(`${username} disconnected from game ${game.id}`);
 
-  game.disconnectedPlayers?.add(username);
+    game.disconnectedPlayers?.add(username);
 
-  const timer = setTimeout(() => {
-    console.log(`${username} did not reconnect. Forfeiting.`);
+    const timer = setTimeout(() => {
+      console.log(`${username} did not reconnect. Forfeiting.`);
+
+      this.forfeitGame(username);
+    }, 30000);
+
+    game.disconnectTimers?.set(username, timer);
+    
+    return game;
+  }
+
+  async forfeitGame(loserUsername: string) {
+    const game = this.getGameByPlayer(loserUsername);
+    if (!game) return null;
 
     game.status = "FINISHED";
-    game.winner =
-      username === game.player1 ? game.player2 : game.player1;
+    const winner =
+      loserUsername === game.player1 ? game.player2 : game.player1;
+    game.winner = winner;
+
+    const duration = Math.floor((Date.now() - game.createdAt) / 1000);
+
+    try {
+      await leaderboardService.finishGame(
+        game.id, game.player1, game.player2, winner, duration
+      );
+    } catch (err) {
+      console.error("Failed to persist forfeit result:", err);
+    }
 
     this.cleanupGame(game.id);
-  }, 30000);
 
-  game.disconnectTimers?.set(username, timer);
-    }
+    return {
+      game,
+      winner,
+      winningCells: null
+    };
+  }
 handleReconnect(username: string) {
   const game = this.getGameByPlayer(username);
   if (!game || game.status !== "ONGOING") return null;

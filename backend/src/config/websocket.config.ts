@@ -50,7 +50,14 @@ export function setupWebSocket(wss: WebSocketServer) {
     socket.on("close", () => {
         if (socket.username) {
             clients.delete(socket.username);
-            gameService.handleDisconnect(socket.username);
+            const game = gameService.handleDisconnect(socket.username);
+            
+            if (game) {
+              const opponentUsername = game.player1 === socket.username ? game.player2 : game.player1;
+              const opponentSocket = clients.get(opponentUsername);
+              opponentSocket?.send(JSON.stringify({ type: "OPPONENT_DISCONNECTED" }));
+            }
+            
             console.log(`${socket.username} disconnected`);
         }
     });
@@ -74,6 +81,12 @@ function handleJoin(socket: Client, username: string) {
         game: existingGame,
       })
     );
+
+    // Notify opponent
+    const opponent = existingGame.player1 === username ? existingGame.player2 : existingGame.player1;
+    const opponentSocket = clients.get(opponent);
+    opponentSocket?.send(JSON.stringify({ type: "OPPONENT_RECONNECTED" }));
+
     return;
   }
 
@@ -114,16 +127,17 @@ function handleJoinBot(socket: Client, username: string) {
 
 /* ---------------- LEAVE GAME ---------------- */
 
-function handleLeaveGame(socket: Client) {
+async function handleLeaveGame(socket: Client) {
   if (!socket.username) return;
 
   // Remove from matchmaking queue if waiting
   matchmakingService.leaveQueue(socket.username);
 
-  // Clean up any game this player is still mapped to
-  const game = gameService.getGameByPlayer(socket.username);
-  if (game) {
-    gameService.cleanupGame(game.id);
+  // Forfeit if in active game
+  const result = await gameService.forfeitGame(socket.username);
+  
+  if (result) {
+    broadcastGameOver(result.game, result.winner, false, undefined);
   }
 
   console.log(`${socket.username} left game`);
