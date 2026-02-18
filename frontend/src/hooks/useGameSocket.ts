@@ -16,6 +16,7 @@ interface UseGameSocketReturn {
   countdown: number | null;
   winningCells: [number, number][] | null;
   connect: (username: string) => void;
+  playBot: (username: string) => void;
   dropDisc: (col: number) => void;
   playAgain: () => void;
   disconnect: () => void;
@@ -203,6 +204,47 @@ export function useGameSocket(): UseGameSocketReturn {
     [handleMessage]
   );
 
+  const playBot = useCallback(
+    (username: string) => {
+      usernameRef.current = username;
+      setMessage("Starting bot game...");
+      setStatus("waiting");
+      setBoard(createEmptyBoard());
+      setWinner(null);
+
+      try {
+        const socket = new WebSocket(WS_URL);
+        ws.current = socket;
+
+        socket.onopen = () => {
+          socket.send(
+            JSON.stringify({ type: "JOIN_BOT_GAME", username })
+          );
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            handleMessage(data);
+          } catch {
+            console.error("Failed to parse message:", event.data);
+          }
+        };
+
+        socket.onclose = () => {
+          setMessage("Disconnected from server.");
+        };
+
+        socket.onerror = () => {
+          setMessage("Connection error. Is the backend running?");
+        };
+      } catch {
+        setMessage("Failed to connect. Check backend URL in src/config.ts");
+      }
+    },
+    [handleMessage]
+  );
+
   const dropDisc = useCallback((col: number) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(
@@ -271,6 +313,7 @@ export function useGameSocket(): UseGameSocketReturn {
     countdown,
     winningCells,
     connect,
+    playBot,
     dropDisc,
     playAgain,
     disconnect,
