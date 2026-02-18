@@ -26,17 +26,43 @@ class LeaderboardService {
         [gameId, player1, player2, winner, duration]
       );
 
-      // 2. Update leaderboard (only if there's a winner)
+      // 2. Update leaderboard
       if (winner) {
+        // Winner: increment wins
         await client.query(
-          `INSERT INTO leaderboard (username, wins, last_updated)
-           VALUES ($1, 1, CURRENT_TIMESTAMP)
+          `INSERT INTO leaderboard (username, wins, losses, draws, last_updated)
+           VALUES ($1, 1, 0, 0, CURRENT_TIMESTAMP)
            ON CONFLICT (username)
            DO UPDATE SET
              wins = leaderboard.wins + 1,
              last_updated = CURRENT_TIMESTAMP`,
           [winner]
         );
+
+        // Loser: increment losses
+        const loser = winner === player1 ? player2 : player1;
+        await client.query(
+          `INSERT INTO leaderboard (username, wins, losses, draws, last_updated)
+           VALUES ($1, 0, 1, 0, CURRENT_TIMESTAMP)
+           ON CONFLICT (username)
+           DO UPDATE SET
+             losses = leaderboard.losses + 1,
+             last_updated = CURRENT_TIMESTAMP`,
+          [loser]
+        );
+      } else {
+        // Draw: increment draws for both players
+        for (const player of [player1, player2]) {
+          await client.query(
+            `INSERT INTO leaderboard (username, wins, losses, draws, last_updated)
+             VALUES ($1, 0, 0, 1, CURRENT_TIMESTAMP)
+             ON CONFLICT (username)
+             DO UPDATE SET
+               draws = leaderboard.draws + 1,
+               last_updated = CURRENT_TIMESTAMP`,
+            [player]
+          );
+        }
       }
 
       await client.query("COMMIT");
@@ -79,7 +105,7 @@ class LeaderboardService {
   async getLeaderboard(limit = 10) {
     const db = getDB();
     const query = `
-      SELECT username, wins, last_updated
+      SELECT username, wins, losses, draws, last_updated
       FROM leaderboard
       ORDER BY wins DESC
       LIMIT $1
