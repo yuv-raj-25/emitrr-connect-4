@@ -1,5 +1,8 @@
 import pkg from "pg";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -30,6 +33,36 @@ const connectDB = async () => {
   return pool;
 };
 
+const runMigrations = async () => {
+  if (!pool) throw new Error("DB not initialized. Call connectDB() first.");
+
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const migrationsDir = path.join(__dirname, "migrations");
+
+  if (!fs.existsSync(migrationsDir)) {
+    console.log("No migrations directory found, skipping.");
+    return;
+  }
+
+  const files = fs
+    .readdirSync(migrationsDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+
+  for (const file of files) {
+    const sql = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
+    try {
+      await pool.query(sql);
+      console.log(`✅ Migration applied: ${file}`);
+    } catch (err: any) {
+      console.error(`❌ Migration failed: ${file}`, err.message);
+    }
+  }
+
+  console.log("All migrations completed.");
+};
+
 const getDB = () => {
   if (!pool) {
     throw new Error("DB not initialized. Call connectDB() first.");
@@ -37,4 +70,4 @@ const getDB = () => {
   return pool;
 };
 
-export { connectDB, getDB };
+export { connectDB, runMigrations, getDB };
