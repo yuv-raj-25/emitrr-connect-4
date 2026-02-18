@@ -11,7 +11,7 @@ const Index = () => {
     countdown, winningCells, connect, playBot, dropDisc, playAgain, disconnect,
     winner, connectionError
   } = useGameSocket();
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(true);
 
   // Connection Error Screen
   if (connectionError) {
@@ -38,16 +38,27 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 font-sans overflow-x-hidden">
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 items-start">
+      <div className={`w-full max-w-7xl grid grid-cols-1 ${showLeaderboard ? "lg:grid-cols-[1fr_350px]" : "lg:grid-cols-1"} gap-8 items-start transition-all duration-500 ease-in-out`}>
         
-        {/* Main Content Area (Header + Game) */}
+        {/* Main Content Area */}
         <div className="flex flex-col gap-8 items-center w-full">
           {/* Header */}
-          <div className="text-center space-y-2 pt-4 sm:pt-0">
+          <div className="text-center space-y-2 pt-4 sm:pt-0 relative w-full flex flex-col items-center">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 drop-shadow-sm">
               4 In A Row
             </h1>
             <p className="text-muted-foreground text-sm sm:text-lg">Online Multiplayer Strategy Game</p>
+            
+            {/* Desktop Toggle Button */}
+            <button
+              onClick={() => setShowLeaderboard(!showLeaderboard)}
+              className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 text-sm text-muted-foreground hover:text-primary transition-colors items-center gap-2 group px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-800/50"
+            >
+              {showLeaderboard ? "Hide Leaderboard" : "Show Leaderboard"}
+              <span className="group-hover:translate-x-0.5 transition-transform">
+                {showLeaderboard ? "→" : "←"}
+              </span>
+            </button>
           </div>
 
           {/* Lobby / Username Entry */}
@@ -118,12 +129,10 @@ const Index = () => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Leaderboard Sidebar */}
-        <div className="w-full flex flex-col items-center gap-4 px-4 pb-8 lg:pb-0 lg:sticky lg:top-8">
-          <div className="lg:hidden w-full flex justify-center">
-            <button
+          
+          {/* Mobile Toggle Button (Bottom) */}
+          <div className="lg:hidden w-full flex justify-center pb-4">
+             <button
               onClick={() => setShowLeaderboard(!showLeaderboard)}
               className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group py-2"
             >
@@ -133,8 +142,11 @@ const Index = () => {
               </span>
             </button>
           </div>
-          
-          <div className={`w-full animate-accordion-down ${!showLeaderboard ? "hidden lg:block" : ""}`}>
+        </div>
+
+        {/* Leaderboard Sidebar */}
+        <div className={`w-full flex flex-col items-center gap-4 px-4 pb-8 lg:pb-0 lg:sticky lg:top-8 transition-all duration-500 ${showLeaderboard ? "opacity-100 translate-x-0" : "hidden opacity-0 translate-x-10"}`}>
+          <div className="w-full animate-accordion-down">
             <Leaderboard entries={leaderboard} />
           </div>
         </div>
