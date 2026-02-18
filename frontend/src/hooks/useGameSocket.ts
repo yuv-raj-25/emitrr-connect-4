@@ -13,6 +13,7 @@ interface UseGameSocketReturn {
   gameId: string;
   leaderboard: LeaderboardEntry[];
   message: string;
+  connectionError: boolean;
   countdown: number | null;
   winningCells: [number, number][] | null;
   connect: (username: string) => void;
@@ -34,6 +35,7 @@ export function useGameSocket(): UseGameSocketReturn {
   const [gameId, setGameId] = useState("");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [message, setMessage] = useState("Enter your username to play");
+  const [connectionError, setConnectionError] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [winningCells, setWinningCells] = useState<[number, number][] | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -165,6 +167,7 @@ export function useGameSocket(): UseGameSocketReturn {
       usernameRef.current = username;
       setMessage("Connecting to server...");
       setStatus("waiting");
+      setConnectionError(false);
       setBoard(createEmptyBoard());
       setWinner(null);
 
@@ -196,9 +199,11 @@ export function useGameSocket(): UseGameSocketReturn {
 
         socket.onerror = () => {
           setMessage("Connection error. Is the backend running?");
+          setConnectionError(true);
         };
       } catch {
         setMessage("Failed to connect. Check backend URL in src/config.ts");
+        setConnectionError(true);
       }
     },
     [handleMessage]
@@ -209,6 +214,7 @@ export function useGameSocket(): UseGameSocketReturn {
       usernameRef.current = username;
       setMessage("Starting bot game...");
       setStatus("waiting");
+      setConnectionError(false);
       setBoard(createEmptyBoard());
       setWinner(null);
 
@@ -237,9 +243,11 @@ export function useGameSocket(): UseGameSocketReturn {
 
         socket.onerror = () => {
           setMessage("Connection error. Is the backend running?");
+          setConnectionError(true);
         };
       } catch {
         setMessage("Failed to connect. Check backend URL in src/config.ts");
+        setConnectionError(true);
       }
     },
     [handleMessage]
@@ -310,6 +318,7 @@ export function useGameSocket(): UseGameSocketReturn {
     gameId,
     leaderboard,
     message,
+    connectionError,
     countdown,
     winningCells,
     connect,
