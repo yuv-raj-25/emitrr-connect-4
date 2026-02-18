@@ -17,47 +17,7 @@ const playerGameMap = new Map<string, string>();
 
 class GameService {
   private gameBoardMap = new Map<string, GameBoard>();
-  private onTurnTimeout?: (game: ActiveGame) => void;
-
-  setOnTurnTimeout(callback: (game: ActiveGame) => void) {
-    this.onTurnTimeout = callback;
-  }
-
-  private startTurnTimer(gameId: string) {
-    const game = activeGames.get(gameId);
-    if (!game || game.status === "FINISHED") return;
-
-    if (game.turnTimer) clearTimeout(game.turnTimer);
-
-    game.turnDeadline = Date.now() + 25000;
-    
-    game.turnTimer = setTimeout(() => {
-      this.handleTurnTimeout(gameId);
-    }, 25000);
-  }
-
-  private handleTurnTimeout(gameId: string) {
-    const game = activeGames.get(gameId);
-    if (!game || game.status === "FINISHED") return;
-
-    // Switch turn without move
-    const gameBoard = this.gameBoardMap.get(gameId);
-    if (gameBoard) {
-      switchPlayer(gameBoard);
-      game.currentPlayer = gameBoard.currentPlayer;
-    } else {
-      game.currentPlayer = game.currentPlayer === 1 ? 2 : 1;
-    }
-    
-    // Notify
-    if (this.onTurnTimeout) {
-      this.onTurnTimeout(game);
-    }
-
-    // Restart timer
-    this.startTurnTimer(gameId);
-  }
-
+  
   createGame(player1: string, player2: string): ActiveGame {
     
     const gameBoard = createBoard();
@@ -72,7 +32,7 @@ class GameService {
       createdAt: Date.now(),
       disconnectedPlayers: new Set(),
       disconnectTimers: new Map(),
-      turnDeadline: Date.now() + 25000,
+
     };
 
     this.gameBoardMap.set(game.id, gameBoard);
@@ -81,8 +41,8 @@ class GameService {
     playerGameMap.set(player1, game.id);
     playerGameMap.set(player2, game.id);
 
-    // Start timer
-    this.startTurnTimer(game.id);
+    // Start timer features for each player 
+
 
     return game;
   }
@@ -137,7 +97,7 @@ class GameService {
       this.cleanupGame(game.id);
 
       // Game over, clear timer
-      if (game.turnTimer) clearTimeout(game.turnTimer);
+
 
       return {
         game,
@@ -164,7 +124,7 @@ class GameService {
       this.cleanupGame(game.id);
 
       // Game over, clear timer
-      if (game.turnTimer) clearTimeout(game.turnTimer);
+
 
       return {
         game,
@@ -181,7 +141,7 @@ class GameService {
     game.currentPlayer = gameBoard.currentPlayer;
 
     // Restart timer
-    this.startTurnTimer(game.id);
+
 
     return { game };
   }
@@ -195,8 +155,7 @@ class GameService {
     activeGames.delete(gameId);
     this.gameBoardMap.delete(gameId);
 
-    if (game.turnTimer) clearTimeout(game.turnTimer);
-    delete game.turnDeadline;
+
     
     if (game.disconnectTimers) {
       for (const timer of game.disconnectTimers.values()) {
@@ -248,8 +207,7 @@ class GameService {
     this.cleanupGame(game.id);
 
     // Game over, clear timer
-    if (game.turnTimer) clearTimeout(game.turnTimer);
-    delete game.turnDeadline;
+
 
     return {
       game,

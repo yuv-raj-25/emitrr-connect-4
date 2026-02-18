@@ -28,6 +28,5 @@ export interface ActiveGame {
 
   disconnectedPlayers?: Set<string>;
   disconnectTimers?: Map<string, NodeJS.Timeout>;
-  turnDeadline?: number;
-  turnTimer?: NodeJS.Timeout;
+
 }

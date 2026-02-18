@@ -16,24 +16,12 @@ export function setupWebSocket(wss: WebSocketServer) {
     socket?.send(
       JSON.stringify({
         type: "GAME_START",
-        game: sanitizeGame(game),
+        game: game,
         player: username,
       })
     );
   });
 
-  // Handle turn timeouts
-  gameService.setOnTurnTimeout((game) => {
-    broadcastGameState(game);
-
-    // If it switched to Bot, trigger move
-    if (game.player2 === "BOT" && game.currentPlayer === 2) {
-      console.log("Turn timeout: Triggering BOT move for game", game.id);
-      triggerBotMove(game); 
-    } else {
-      console.log("Turn timeout: Not triggering BOT (P2:", game.player2, "Curr:", game.currentPlayer, ")");
-    }
-  });
 
   wss.on("connection", (socket: Client) => {
     console.log("Client connected");
@@ -62,6 +50,7 @@ export function setupWebSocket(wss: WebSocketServer) {
 
     socket.on("close", () => {
         if (socket.username) {
+            matchmakingService.leaveQueue(socket.username);
             // Only handle disconnect if this was the active socket
             if (clients.get(socket.username) === socket) {
                 clients.delete(socket.username);
@@ -90,7 +79,6 @@ function handleJoin(socket: Client, username: string) {
   socket.username = username;
   clients.set(username, socket);
 
-  const result = matchmakingService.joinQueue(username);
   const existingGame = gameService.handleReconnect(username);
 
   // If player reconnected
@@ -98,7 +86,7 @@ function handleJoin(socket: Client, username: string) {
     socket.send(
       JSON.stringify({
         type: "GAME_RECONNECTED",
-        game: sanitizeGame(existingGame),
+        game: existingGame,
       })
     );
 
@@ -109,6 +97,8 @@ function handleJoin(socket: Client, username: string) {
 
     return;
   }
+
+  const result = matchmakingService.joinQueue(username);
 
   if (result.status === "WAITING") {
     socket.send(JSON.stringify({ type: "WAITING" }));
@@ -122,7 +112,7 @@ function handleJoin(socket: Client, username: string) {
     socket.send(
       JSON.stringify({
         type: "GAME_START",
-        game: sanitizeGame(game),
+        game: game,
         player: username,
       })
     );
@@ -130,7 +120,7 @@ function handleJoin(socket: Client, username: string) {
     opponentSocket?.send(
       JSON.stringify({
         type: "GAME_START",
-        game: sanitizeGame(game),
+        game: game,
         player: result.opponent,
       })
     );
@@ -214,7 +204,7 @@ function broadcastGameState(game: any) {
 
   const payload = JSON.stringify({
     type: "GAME_UPDATE",
-    game: sanitizeGame(game),
+    game: game,
   });
 
   p1?.send(payload);
@@ -231,7 +221,7 @@ function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCe
     draw: draw || false,
     winningCells: winningCells || null,
 
-    game: sanitizeGame(game),
+    game: game,
   });
 
   p1?.send(payload);
@@ -265,7 +255,4 @@ async function triggerBotMove(game: any) {
 }
 
 
-function sanitizeGame(game: any) {
-  const { turnTimer, disconnectTimers, ...rest } = game;
-  return rest;
-}
+

@@ -40,6 +40,8 @@ class MatchmakingService {
     }
 
     // Otherwise add to queue
+    if (this.waitingTimer) clearTimeout(this.waitingTimer);
+    
     this.waitingPlayer = username;
 
     this.waitingTimer = setTimeout(() => {
@@ -67,6 +69,9 @@ class MatchmakingService {
       const game = gameService.createGame(username, "BOT");
       // @ts-ignore - Manually override ID if needed, or rely on createGame generating one. 
       // Actually createGame generates ID. We should return that ID.
+      this.waitingPlayer = null;
+      this.waitingTimer = null;
+      
       this.onBotGameStart(username, game);
       return { status: "BOT_MATCHED", gameId: game.id };
     }
