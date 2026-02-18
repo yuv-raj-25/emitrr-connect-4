@@ -1,10 +1,10 @@
 import { memo } from "react";
 
-export const GameGuide = memo(function GameGuide() {
+export const GameGuide = memo(function GameGuide({ onClose }: { onClose?: () => void }) {
   return (
     <div className="w-full glass-card rounded-2xl p-6 animate-fade-in space-y-4 text-slate-200">
-      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-        <span className="text-2xl">📜</span> How to Play
+      <h2 className="text-xl font-bold text-white flex items-center gap-2 justify-between">
+        <span className="flex items-center gap-2"><span className="text-2xl">📜</span> How to Play</span>
       </h2>
       
       <div className="space-y-4 text-sm leading-relaxed">
@@ -33,10 +33,19 @@ export const GameGuide = memo(function GameGuide() {
           </ul>
         </section>
 
-        <div className="pt-2 border-t border-slate-700/50 mt-4">
+        <div className="pt-2 border-t border-slate-700/50 mt-4 space-y-4">
           <p className="text-xs text-slate-500 italic">
             Tip: Plan ahead and block your opponent's moves!
           </p>
+          
+          {onClose && (
+            <button 
+              onClick={onClose}
+              className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-medium border border-white/10"
+            >
+              Got it!
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -41,36 +41,23 @@ const Index = () => {
 
   return (
 
-    <div className="min-h-screen p-4 sm:p-8 font-sans overflow-x-hidden relative">
-      <div className="max-w-[1600px] mx-auto grid lg:grid-cols-[220px_1fr_220px] xl:grid-cols-[280px_1fr_280px] gap-4 lg:gap-8 items-start">
+    <div className="min-h-screen p-4 sm:p-8 font-sans overflow-x-hidden relative flex flex-col items-center">
+      <div className="w-full max-w-4xl flex flex-col gap-6 sm:gap-8 items-center">
         
-        {/* Desktop Sidebar Guide */}
-        <aside className="hidden lg:block sticky top-8">
-          <GameGuide />
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="w-full flex flex-col items-center justify-center">
-          <div className="w-full max-w-4xl flex flex-col gap-6 sm:gap-8 items-center">
-            
-            {/* Header with Mobile Guide Toggle */}
-            <div className="text-center space-y-2 pt-4 sm:pt-0 relative w-full flex flex-col items-center">
-              <div className="relative w-full flex justify-center items-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 drop-shadow-sm">
-                  4 In A Row
-                </h1>
-                
-                {/* Mobile Guide Button */}
-                <button 
-                  onClick={() => setShowGuide(true)}
-                  className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 text-2xl p-2 hover:bg-white/10 rounded-full transition-colors"
-                  aria-label="How to play"
-                >
-                  ❓
-                </button>
-              </div>
-              <p className="text-muted-foreground text-sm sm:text-lg">Online Multiplayer Strategy Game</p>
-            </div>
+        {/* Header */}
+        <div className="text-center space-y-2 pt-4 sm:pt-0 relative w-full flex flex-col items-center">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 drop-shadow-sm">
+            4 In A Row
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-lg">Online Multiplayer Strategy Game</p>
+          
+          <button 
+            onClick={() => setShowGuide(true)}
+            className="text-primary hover:text-primary/80 underline underline-offset-4 text-sm sm:text-base font-medium transition-colors"
+          >
+            How to play
+          </button>
+        </div>
 
             {/* Lobby / Username Entry */}
             {!isInGame && !isGameOver && (
@@ -160,8 +147,7 @@ const Index = () => {
               )}
             </div>
           </div>
-        </main>
-      </div>
+
 
       {/* Mobile Guide Modal */}
       {showGuide && (
@@ -173,7 +159,7 @@ const Index = () => {
             >
               ✕
             </button>
-            <GameGuide />
+            <GameGuide onClose={() => setShowGuide(false)} />
           </div>
         </div>
       )}
