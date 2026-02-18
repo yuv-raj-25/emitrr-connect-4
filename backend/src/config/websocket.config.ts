@@ -16,10 +16,23 @@ export function setupWebSocket(wss: WebSocketServer) {
     socket?.send(
       JSON.stringify({
         type: "GAME_START",
-        game,
+        game: sanitizeGame(game),
         player: username,
       })
     );
+  });
+
+  // Handle turn timeouts
+  gameService.setOnTurnTimeout((game) => {
+    broadcastGameState(game);
+
+    // If it switched to Bot, trigger move
+    if (game.player2 === "BOT" && game.currentPlayer === 2) {
+      console.log("Turn timeout: Triggering BOT move for game", game.id);
+      triggerBotMove(game); 
+    } else {
+      console.log("Turn timeout: Not triggering BOT (P2:", game.player2, "Curr:", game.currentPlayer, ")");
+    }
   });
 
   wss.on("connection", (socket: Client) => {
@@ -85,7 +98,7 @@ function handleJoin(socket: Client, username: string) {
     socket.send(
       JSON.stringify({
         type: "GAME_RECONNECTED",
-        game: existingGame,
+        game: sanitizeGame(existingGame),
       })
     );
 
@@ -109,7 +122,7 @@ function handleJoin(socket: Client, username: string) {
     socket.send(
       JSON.stringify({
         type: "GAME_START",
-        game,
+        game: sanitizeGame(game),
         player: username,
       })
     );
@@ -117,7 +130,7 @@ function handleJoin(socket: Client, username: string) {
     opponentSocket?.send(
       JSON.stringify({
         type: "GAME_START",
-        game,
+        game: sanitizeGame(game),
         player: result.opponent,
       })
     );
@@ -201,7 +214,7 @@ function broadcastGameState(game: any) {
 
   const payload = JSON.stringify({
     type: "GAME_UPDATE",
-    game,
+    game: sanitizeGame(game),
   });
 
   p1?.send(payload);
@@ -217,9 +230,42 @@ function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCe
     winner: winner || null,
     draw: draw || false,
     winningCells: winningCells || null,
-    game,
+
+    game: sanitizeGame(game),
   });
 
   p1?.send(payload);
   p2?.send(payload);
+}
+
+
+async function triggerBotMove(game: any) {
+  setTimeout(async () => {
+    try {
+      const botMove = botService.getBestMove(game.board);
+      console.log("Bot making move:", botMove);
+      const botResult = await gameService.makeMove("BOT", botMove);
+
+      if (!("error" in botResult)) {
+        broadcastGameState(botResult.game);
+
+        if (botResult.winner || botResult.draw) {
+          broadcastGameOver(
+            botResult.game,
+            botResult.winner,
+            botResult.draw,
+            botResult.winningCells
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error triggering bot move:", error);
+    }
+  }, 500);
+}
+
+
+function sanitizeGame(game: any) {
+  const { turnTimer, disconnectTimers, ...rest } = game;
+  return rest;
 }
