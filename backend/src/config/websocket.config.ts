@@ -33,6 +33,10 @@ export function setupWebSocket(wss: WebSocketServer) {
           handleJoin(socket, data.username);
           break;
 
+        case "JOIN_BOT_GAME":
+          handleJoinBot(socket, data.username);
+          break;
+
         case "MAKE_MOVE":
           handleMove(socket, data.column);
           break;
@@ -98,6 +102,14 @@ function handleJoin(socket: Client, username: string) {
       })
     );
   }
+}
+
+function handleJoinBot(socket: Client, username: string) {
+  socket.username = username;
+  clients.set(username, socket);
+
+  // Directly create bot game
+  matchmakingService.createBotGame(username);
 }
 
 /* ---------------- LEAVE GAME ---------------- */
