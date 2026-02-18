@@ -1,3 +1,5 @@
 // Point this to your backend server
-export const WS_URL = "ws://localhost:5000";
-export const API_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://emitrr-connect-4.onrender.com";
+
+export const WS_URL = BACKEND_URL.replace(/^http/, "ws");
+export const API_URL = BACKEND_URL;
