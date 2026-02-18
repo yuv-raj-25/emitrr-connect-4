@@ -5,7 +5,7 @@ import { app } from "./app.js";
 
 // config
 import { setupWebSocket } from "./config/websocket.config.js";
-import { connectDB } from "./db/index.js";
+import { connectDB, runMigrations } from "./db/index.js";
 
 dotenv.config();
 
@@ -18,8 +18,14 @@ setupWebSocket(wss);
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+connectDB()
+  .then(() => runMigrations())
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to start server:", err);
+    process.exit(1);
   });
-});
