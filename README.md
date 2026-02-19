@@ -57,8 +57,18 @@ cd backend
 # Install dependencies
 npm install
 
-# Create .env (Optional - defaults work for local Docker)
-# CP .env.example .env
+# Create .env file
+# Create a file named .env in the backend directory with the following content:
+# values match the docker-compose.yml configuration
+echo "PORT=5000
+CLIENT_URL=http://localhost:5173
+
+# Database
+PGHOST=localhost
+PGPORT=5433
+PGUSER=postgres
+PGPASSWORD=postgres
+PGDATABASE=connect4" > .env
 
 # Start Server (Auto-runs migrations)
 npm run dev
@@ -120,3 +130,33 @@ The backend is hardened for production environments (like Render) where Kafka mi
   - The migration script is idempotent. Just restart the backend.
 - **Kafka connection refused?**
   - Ensure Docker is running. Wait a few seconds for containers to initialize.
+
+---
+
+## 🏗️ Architecture
+
+- **State Management**: Active games are stored **in-memory** (Map) for low-latency real-time performance.
+- **Persistence**: Completed games and player stats are persisted in **PostgreSQL**.
+- **Decoupling**: **Kafka** is used to stream game events (Start, Move, End) to the analytics consumer, ensuring the game loop remains blazing fast.
+- **Analytics**: A standalone **Consumer Service** processes events to compute metrics (e.g., Duration, Win Rates) asynchronously.
+- **Performance**: The leaderboard uses indexed SQL queries for fast ranking.
+
+## ⚖️ Tradeoffs & Scalability
+
+Since this is a demo application, certain tradeoffs were made for simplicity vs. scale:
+
+1.  **In-Memory State** → **Single Instance**
+    - *Tradeoff*: Game state is held in the server's memory. This means the backend cannot currently be horizontally scaled (multiple instances would split the game state).
+    - *Solution*: For production scale, state should be moved to a shared **Redis** store.
+
+2.  **WebSocket Scaling**
+    - *Tradeoff*: WebSockets require persistent connections.
+    - *Solution*: Scaling would require a load balancer with **Sticky Sessions** or a Pub/Sub mechanism (like Redis Pub/Sub) to broadcast messages across instances.
+
+3.  **Free-Tier Hosting (Render)**
+    - *Tradeoff*: The free tier spins down after inactivity ("Cold Starts").
+    - *Impact*: The first request might take 30-50s to wake up the server.
+
+4.  **Kafka in Production**
+    - *Tradeoff*: Running Kafka in production is expensive resources-wise.
+    - *Solution*: The system is designed to gracefully degrade (skip analytics) if Kafka is unavailable.
