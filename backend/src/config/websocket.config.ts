@@ -24,8 +24,9 @@ export function setupWebSocket(wss: WebSocketServer) {
   });
 
   // When game is forfeited (e.g. via timer), notify clients
+
   gameService.setOnForfeit((game, winner) => {
-    broadcastGameOver(game, winner, false, undefined);
+    broadcastGameOver(game, winner, false, undefined, "player_timeout");
   });
 
 
@@ -153,7 +154,7 @@ async function handleLeaveGame(socket: Client) {
   const result = await gameService.forfeitGame(socket.username);
   
   if (result) {
-    broadcastGameOver(result.game, result.winner, false, undefined);
+    broadcastGameOver(result.game, result.winner, false, undefined, "player_conceded");
   }
 
   console.log(`${socket.username} left game`);
@@ -217,7 +218,7 @@ function broadcastGameState(game: any) {
   p2?.send(payload);
 }
 
-function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCells?: [number, number][]) {
+function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCells?: [number, number][], reason?: string) {
   const p1 = clients.get(game.player1);
   const p2 = clients.get(game.player2);
 
@@ -226,6 +227,7 @@ function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCe
     winner: winner || null,
     draw: draw || false,
     winningCells: winningCells || null,
+    reason: reason || null,
 
     game: game,
   });
