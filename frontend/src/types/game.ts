@@ -5,7 +5,7 @@ export type Board = Cell[][];
 export const ROWS = 6;
 export const COLS = 7;
 
-export type GameStatus = "waiting" | "playing" | "won" | "draw" | "forfeited";
+export type GameStatus = "waiting" | "playing" | "won" | "lost" | "draw" | "forfeited";
 
 export interface GameState {
   board: Board;

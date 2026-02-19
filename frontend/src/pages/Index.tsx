@@ -11,7 +11,7 @@ const Index = () => {
     board, currentPlayer, playerNumber, status,
     opponentName, gameId, leaderboard, message,
     countdown, winningCells, connect, playBot, dropDisc, playAgain, disconnect,
-    winner, connectionError
+    connectionError
   } = useGameSocket();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -37,7 +37,7 @@ const Index = () => {
   }
 
   const isInGame = status === "playing";
-  const isGameOver = status === "won" || status === "draw" || status === "forfeited";
+  const isGameOver = status === "won" || status === "draw" || status === "forfeited" || status === "lost";
   const isWaiting = status === "waiting" && message.includes("Waiting");
 
   return (
@@ -99,11 +99,20 @@ const Index = () => {
             {/* Game Over Actions */}
             {isGameOver && (
               <div className="flex flex-col items-center gap-4 sm:gap-6 animate-bounce-in px-4 text-center">
-                {status === "won" && winner && (
+                {status === "won" && (
                   <div>
-                    <p className="text-3xl sm:text-4xl font-bold drop-shadow-md" style={{ color: message.includes("You win") ? "#4ade80" : "#f87171" }}>
-                      {message.includes("You win") ? "🎉 Victory! 🎉" : "💔 Defeat"}
+                    <p className="text-3xl sm:text-4xl font-bold drop-shadow-md text-green-400">
+                      🎉 Victory! 🎉
                     </p>
+                    <p className="text-lg text-muted-foreground mt-2">{message}</p>
+                  </div>
+                )}
+                {status === "lost" && (
+                  <div>
+                    <p className="text-3xl sm:text-4xl font-bold drop-shadow-md text-red-400">
+                      💔 Defeat
+                    </p>
+                    <p className="text-lg text-muted-foreground mt-2">{message}</p>
                   </div>
                 )}
                 {status === "draw" && (

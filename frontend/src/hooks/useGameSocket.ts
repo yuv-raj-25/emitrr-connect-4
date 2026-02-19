@@ -133,13 +133,24 @@ export function useGameSocket(): UseGameSocketReturn {
             setWinner(null);
             setMessage("It's a draw!");
           } else if (data.winner) {
-            setStatus("won");
+            const isMe = data.winner === username;
+            setStatus(isMe ? "won" : "lost");
             setWinner(data.winner);
-            setMessage(
-              data.winner === username
+            let msg = "";
+            if (data.reason === "player_timeout") {
+              msg = isMe
+                ? "Opponent timed out. You win! 🎉"
+                : "Time ran out.";
+            } else if (data.reason === "player_conceded") {
+              msg = isMe
+                ? "Opponent left the game. You win! 🎉"
+                : "Player left.";
+            } else {
+              msg = isMe
                 ? "You win! 🎉"
-                : `${data.winner} wins!`
-            );
+                : `${data.winner} wins!`;
+            }
+            setMessage(msg);
           }
           fetchLeaderboard();
           break;
