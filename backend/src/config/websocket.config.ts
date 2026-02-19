@@ -20,6 +20,12 @@ export function setupWebSocket(wss: WebSocketServer) {
         player: username,
       })
     );
+
+  });
+
+  // When game is forfeited (e.g. via timer), notify clients
+  gameService.setOnForfeit((game, winner) => {
+    broadcastGameOver(game, winner, false, undefined);
   });
 
 

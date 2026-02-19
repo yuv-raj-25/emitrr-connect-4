@@ -17,6 +17,11 @@ const playerGameMap = new Map<string, string>();
 
 class GameService {
   private gameBoardMap = new Map<string, GameBoard>();
+  private onForfeitCallback: ((game: ActiveGame, winner: string) => void) | null = null;
+
+  setOnForfeit(cb: (game: ActiveGame, winner: string) => void) {
+    this.onForfeitCallback = cb;
+  }
   
   createGame(player1: string, player2: string): ActiveGame {
     
@@ -208,6 +213,12 @@ class GameService {
 
     // Game over, clear timer
 
+
+
+
+    if (this.onForfeitCallback) {
+      this.onForfeitCallback(game, winner);
+    }
 
     return {
       game,
