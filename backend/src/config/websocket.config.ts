@@ -227,32 +227,3 @@ function broadcastGameOver(game: any, winner?: string, draw?: boolean, winningCe
   p1?.send(payload);
   p2?.send(payload);
 }
-
-
-async function triggerBotMove(game: any) {
-  setTimeout(async () => {
-    try {
-      const botMove = botService.getBestMove(game.board);
-      console.log("Bot making move:", botMove);
-      const botResult = await gameService.makeMove("BOT", botMove);
-
-      if (!("error" in botResult)) {
-        broadcastGameState(botResult.game);
-
-        if (botResult.winner || botResult.draw) {
-          broadcastGameOver(
-            botResult.game,
-            botResult.winner,
-            botResult.draw,
-            botResult.winningCells
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error triggering bot move:", error);
-    }
-  }, 500);
-}
-
-
-
