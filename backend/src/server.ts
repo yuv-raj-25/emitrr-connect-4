@@ -6,6 +6,7 @@ import { app } from "./app.js";
 // config
 import { setupWebSocket } from "./config/websocket.config.js";
 import { connectDB, runMigrations } from "./db/index.js";
+import { kafkaProducer } from "./services/kafka.producer.js";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDB()
   .then(() => runMigrations())
+  .then(() => kafkaProducer.connect())
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

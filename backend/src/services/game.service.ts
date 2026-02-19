@@ -12,6 +12,8 @@ import { leaderboardService } from "./leaderboard.service.js";
 import { getDB } from "../db/index.js";
 
 
+import { kafkaProducer } from "./kafka.producer.js";
+
 const activeGames = new Map<string, ActiveGame>();
 const playerGameMap = new Map<string, string>();
 
@@ -48,6 +50,15 @@ class GameService {
 
     // Start timer features for each player 
 
+
+    // Start timer features for each player 
+
+    kafkaProducer.sendGameEvent("GAME_START", {
+      gameId: game.id,
+      player1: game.player1,
+      player2: game.player2,
+      timestamp: new Date().toISOString(),
+    });
 
     return game;
   }
@@ -101,8 +112,13 @@ class GameService {
 
       this.cleanupGame(game.id);
 
-      // Game over, clear timer
-
+      kafkaProducer.sendGameEvent("GAME_OVER", {
+        gameId: game.id,
+        winner: username,
+        reason: "win",
+        duration,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         game,
@@ -128,8 +144,12 @@ class GameService {
 
       this.cleanupGame(game.id);
 
-      // Game over, clear timer
-
+      kafkaProducer.sendGameEvent("GAME_OVER", {
+        gameId: game.id,
+        reason: "draw",
+        duration,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         game,
@@ -147,6 +167,23 @@ class GameService {
 
     // Restart timer
 
+    kafkaProducer.sendGameEvent("MOVE", {
+      gameId: game.id,
+      player: username,
+      column,
+      timestamp: new Date().toISOString(),
+    });
+
+
+    // Restart timer
+
+
+    kafkaProducer.sendGameEvent("MOVE", {
+      gameId: game.id,
+      player: username,
+      column,
+      timestamp: new Date().toISOString(),
+    });
 
     return { game };
   }
@@ -219,6 +256,15 @@ class GameService {
     if (this.onForfeitCallback) {
       this.onForfeitCallback(game, winner);
     }
+
+    kafkaProducer.sendGameEvent("GAME_OVER", {
+      gameId: game.id,
+      winner: winner,
+      reason: "forfeit",
+      loser: loserUsername,
+      duration,
+      timestamp: new Date().toISOString(),
+    });
 
     return {
       game,
