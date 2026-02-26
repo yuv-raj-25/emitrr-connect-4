@@ -273,6 +273,7 @@ class GameService {
       winningCells: null
     };
   }
+  
   handleReconnect(username: string) {
     const game = this.getGameByPlayer(username);
     if (!game || game.status !== "ONGOING") return null;
