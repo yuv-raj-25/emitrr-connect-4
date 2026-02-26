@@ -14,6 +14,7 @@ import { getDB } from "../db/index.js";
 
 import { kafkaProducer } from "./kafka.producer.js";
 
+
 const activeGames = new Map<string, ActiveGame>();
 const playerGameMap = new Map<string, string>();
 
