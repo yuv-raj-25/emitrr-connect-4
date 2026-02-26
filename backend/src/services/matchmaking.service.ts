@@ -17,7 +17,7 @@ class MatchmakingService {
   setOnBotGameStart(cb: BotGameCallback) {
     this.onBotGameStart = cb;
   }
-
+  
   joinQueue(username: string): MatchResult {
     // If someone already waiting → match immediately
     if (this.waitingPlayer && this.waitingPlayer !== username) {
