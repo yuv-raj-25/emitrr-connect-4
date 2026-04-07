@@ -21,7 +21,6 @@ const getLeaderboard = asyncHandler(async (req: Request, res: Response) => {
     new ApiResponse(leaderboard, "Leaderboard fetched successfully", 200)
   );
 });
-
 /**
  * GET /api/leaderboard/:username/history?limit=10
  * Returns match history for a player
